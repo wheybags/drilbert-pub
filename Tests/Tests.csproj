@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Configurations>Debug;Release;ReleaseDemo;DebugDemo</Configurations>
+        <Platforms>x64</Platforms>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Drilbert\Drilbert.csproj" />
+    </ItemGroup>
+
+    <!-- set defaults, this will be overrriden during publish by -p:DrilbertTargetOs=... -->
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <DrilbertTargetOs>win</DrilbertTargetOs>
+    </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+        <DrilbertTargetOs>osx</DrilbertTargetOs>
+    </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+        <DrilbertTargetOs>linux</DrilbertTargetOs>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(DrilbertTargetOs)' == 'win'">
+        <TargetFramework>net6.0-windows</TargetFramework>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(DrilbertTargetOs)' == 'linux'">
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(DrilbertTargetOs)' == 'osx'">
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+</Project>

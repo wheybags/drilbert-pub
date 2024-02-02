@@ -309,9 +309,43 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="origin">Center of the rotation. 0,0 by default.</param>
         /// <param name="effects">Modificators for drawing. Can be combined.</param>
         /// <param name="layerDepth">A depth of the layer of this sprite.</param>
+        public void Draw (Texture2D texture,
+                          Rectangle destinationRectangle,
+                          Rectangle? sourceRectangle,
+                          Color color,
+                          float rotation,
+                          Vector2 origin,
+                          SpriteEffects effects,
+                          float layerDepth)
+        {
+            Draw(texture,
+                 new Vector2(destinationRectangle.X, destinationRectangle.Y), new Vector2(destinationRectangle.Width, destinationRectangle.Height),
+                 sourceRectangle.HasValue ? new Vector2(sourceRectangle.Value.X, sourceRectangle.Value.Y) : null, sourceRectangle.HasValue ? new Vector2(sourceRectangle.Value.Width, sourceRectangle.Value.Height) : null,
+                 color,
+                 rotation,
+                 origin,
+                 effects,
+                 layerDepth);
+        }
+
+        /// <summary>
+        /// Submit a sprite for drawing in the current batch.
+        /// </summary>
+        /// <param name="texture">A texture.</param>
+        /// <param name="destinationRectangleTL">The drawing bounds on screen, top left coordinates.</param>
+        /// <param name="destinationRectangleWH">The drawing bounds on screen, width and height.</param>
+        /// <param name="sourceRectangleTL">An optional region on the texture which will be rendered, top left coordinates. If null - draws full texture.</param>
+        /// <param name="sourceRectangleWH">An optional region on the texture which will be rendered, width and height.</param>
+        /// <param name="color">A color mask.</param>
+        /// <param name="rotation">A rotation of this sprite.</param>
+        /// <param name="origin">Center of the rotation. 0,0 by default.</param>
+        /// <param name="effects">Modificators for drawing. Can be combined.</param>
+        /// <param name="layerDepth">A depth of the layer of this sprite.</param>
 		public void Draw (Texture2D texture,
-			Rectangle destinationRectangle,
-			Rectangle? sourceRectangle,
+			Vector2 destinationRectangleTL,
+			Vector2 destinationRectangleWH,
+			Vector2? sourceRectangleTL,
+			Vector2? sourceRectangleWH,
 			Color color,
 			float rotation,
 			Vector2 origin,
@@ -340,32 +374,33 @@ namespace Microsoft.Xna.Framework.Graphics
                     break;
             }
 
-            if (sourceRectangle.HasValue)
+            if (sourceRectangleTL.HasValue)
             {
-                var srcRect = sourceRectangle.GetValueOrDefault();
-                _texCoordTL.X = srcRect.X * texture.TexelWidth;
-                _texCoordTL.Y = srcRect.Y * texture.TexelHeight;
-                _texCoordBR.X = (srcRect.X + srcRect.Width) * texture.TexelWidth;
-                _texCoordBR.Y = (srcRect.Y + srcRect.Height) * texture.TexelHeight;
+                var srcRectTL = sourceRectangleTL.GetValueOrDefault();
+                var srcRectWH = sourceRectangleWH.GetValueOrDefault();
+                _texCoordTL.X = srcRectTL.X * texture.TexelWidth;
+                _texCoordTL.Y = srcRectTL.Y * texture.TexelHeight;
+                _texCoordBR.X = (srcRectTL.X + srcRectWH.X) * texture.TexelWidth;
+                _texCoordBR.Y = (srcRectTL.Y + srcRectWH.Y) * texture.TexelHeight;
 
-                if(srcRect.Width != 0)
-                    origin.X = origin.X * (float)destinationRectangle.Width / (float)srcRect.Width;
+                if(srcRectWH.X != 0)
+                    origin.X = origin.X * (float)destinationRectangleWH.X / (float)srcRectWH.X;
                 else
-                    origin.X = origin.X * (float)destinationRectangle.Width * texture.TexelWidth;
-                if(srcRect.Height != 0)
-                    origin.Y = origin.Y * (float)destinationRectangle.Height / (float)srcRect.Height; 
+                    origin.X = origin.X * (float)destinationRectangleWH.X * texture.TexelWidth;
+                if(srcRectWH.Y != 0)
+                    origin.Y = origin.Y * (float)destinationRectangleWH.Y / (float)srcRectWH.Y;
                 else
-                    origin.Y = origin.Y * (float)destinationRectangle.Height * texture.TexelHeight;
+                    origin.Y = origin.Y * (float)destinationRectangleWH.Y * texture.TexelHeight;
             }
             else
             {
                 _texCoordTL = Vector2.Zero;
                 _texCoordBR = Vector2.One;
-                
-                origin.X = origin.X * (float)destinationRectangle.Width  * texture.TexelWidth;
-                origin.Y = origin.Y * (float)destinationRectangle.Height * texture.TexelHeight;
+
+                origin.X = origin.X * (float)destinationRectangleWH.X  * texture.TexelWidth;
+                origin.Y = origin.Y * (float)destinationRectangleWH.Y * texture.TexelHeight;
             }
-            
+
 			if ((effects & SpriteEffects.FlipVertically) != 0)
             {
                 var temp = _texCoordBR.Y;
@@ -381,10 +416,10 @@ namespace Microsoft.Xna.Framework.Graphics
 
 		    if (rotation == 0f)
 		    {
-                item.Set(destinationRectangle.X - origin.X,
-                        destinationRectangle.Y - origin.Y,
-                        destinationRectangle.Width,
-                        destinationRectangle.Height,
+                item.Set(destinationRectangleTL.X - origin.X,
+                        destinationRectangleTL.Y - origin.Y,
+                        destinationRectangleWH.X,
+                        destinationRectangleWH.Y,
                         color,
                         _texCoordTL,
                         _texCoordBR,
@@ -392,12 +427,12 @@ namespace Microsoft.Xna.Framework.Graphics
             }
             else
 		    {
-                item.Set(destinationRectangle.X,
-                        destinationRectangle.Y,
+                item.Set(destinationRectangleTL.X,
+                        destinationRectangleTL.Y,
                         -origin.X,
                         -origin.Y,
-                        destinationRectangle.Width,
-                        destinationRectangle.Height,
+                        destinationRectangleWH.X,
+                        destinationRectangleWH.Y,
                         MathF.Sin(rotation),
                         MathF.Cos(rotation),
                         color,

@@ -1,0 +1,98 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <TieredCompilation>false</TieredCompilation>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Configurations>Debug;Release;ReleaseDemo;DebugDemo</Configurations>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <!-- set defaults, this will be overrriden during publish by -p:DrilbertTargetOs=... -->
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <DrilbertTargetOs>win</DrilbertTargetOs>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <DrilbertTargetOs>osx</DrilbertTargetOs>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <DrilbertTargetOs>linux</DrilbertTargetOs>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'ReleaseDemo' ">
+    <DefineConstants>TRACE;DEMO</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'DebugDemo' ">
+    <DefineConstants>TRACE;DEMO;DEBUG</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Icon.ico" />
+    <None Remove="Icon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Icon.ico" />
+    <EmbeddedResource Include="Icon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <MonoGameContentReference Include="Content\Content.mgcb" />
+  </ItemGroup>
+  <ItemGroup>
+    <TrimmerRootAssembly Include="MonoGame.Framework" Visible="false" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(DrilbertTargetOs)' == 'win'">
+    <TargetFramework>net6.0-windows</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(DrilbertTargetOs)' == 'linux'">
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(DrilbertTargetOs)' == 'osx'">
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(DrilbertTargetOs)' == 'win'">
+    <Reference Include="Steamworks.NET">
+      <HintPath>..\extern\Steamworks.NET\Windows-x64\Steamworks.NET.dll</HintPath>
+    </Reference>
+    <Content Include="..\extern\Steamworks.NET\Windows-x64\steam_api64.dll">
+      <Link>steam_api64.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <ProjectReference Include="..\extern\MonoGame\MonoGame.Framework\MonoGame.Framework.WindowsDX.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DrilbertTargetOs)' == 'linux'">
+    <Reference Include="Steamworks.NET">
+      <HintPath>..\extern\Steamworks.NET\OSX-Linux-x64\Steamworks.NET.dll</HintPath>
+    </Reference>
+    <Content Include="..\extern\Steamworks.NET\OSX-Linux-x64\libsteam_api.so">
+      <Link>libsteam_api.so</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <ProjectReference Include="..\extern\MonoGame\MonoGame.Framework\MonoGame.Framework.DesktopGL.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DrilbertTargetOs)' == 'osx'">
+    <Reference Include="Steamworks.NET">
+      <HintPath>..\extern\Steamworks.NET\OSX-Linux-x64\Steamworks.NET.dll</HintPath>
+    </Reference>
+    <Content Include="..\extern\Steamworks.NET\OSX-Linux-x64\steam_api.bundle\Contents\MacOS\libsteam_api.dylib">
+      <Link>libsteam_api.dylib</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <ProjectReference Include="..\extern\MonoGame\MonoGame.Framework\MonoGame.Framework.DesktopGL.csproj" />
+  </ItemGroup>
+
+</Project>

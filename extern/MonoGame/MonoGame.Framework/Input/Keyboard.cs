@@ -19,7 +19,17 @@ namespace Microsoft.Xna.Framework.Input
 		{
             return PlatformGetState();
 		}
-		
+
+        /// <summary>
+        /// Returns the current keyboard, ignoring current keyboard layout.
+        /// This means, for example, pressing Z on an azerty layout will register as W.
+        /// </summary>
+        /// <returns>Current keyboard state.</returns>
+        public static KeyboardState GetStateByScancode()
+        {
+            return PlatformGetStateByScancode();
+        }
+
         /// <summary>
         /// Returns the current keyboard state for a given player.
         /// </summary>

@@ -552,12 +552,39 @@ namespace Microsoft.Xna.Framework.Graphics
             }
         }
 
+        private float getCurrentDpiScale()
+        {
+            int winW, winH;
+            Sdl.Window.GetSize(SdlGameWindow.Instance.Handle, out winW, out winH);
+
+            int drawW, drawH;
+            Sdl.GL.GetDrawableSize(SdlGameWindow.Instance.Handle, out drawW, out drawH);
+
+            return (float)drawW / (float)winW;
+        }
+
         private void PlatformSetViewport(ref Viewport value)
         {
             if (IsRenderTargetBound)
+            {
                 GL.Viewport(value.X, value.Y, value.Width, value.Height);
+            }
             else
-                GL.Viewport(value.X, PresentationParameters.BackBufferHeight - value.Y - value.Height, value.Width, value.Height);
+            {
+                if (value.X != 0 || value.Y != 0)
+                    throw new Exception("I never bothered to implement this / check if it works");
+
+                float scale = 1;
+                if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    scale = getCurrentDpiScale();
+
+                int x = value.X;
+                int y = value.Y;// PresentationParameters.BackBufferHeight - value.Y - value.Height;
+                int w = (int)(value.Width * scale);
+                int h = (int)(value.Height * scale);
+
+                GL.Viewport(x, y, w, h);
+            }
             GraphicsExtensions.LogGLError("GraphicsDevice.Viewport_set() GL.Viewport");
 
             GL.DepthRange(value.MinDepth, value.MaxDepth);

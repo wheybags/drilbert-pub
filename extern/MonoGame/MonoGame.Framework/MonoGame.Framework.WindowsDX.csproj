@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0-windows</TargetFramework>
@@ -9,6 +9,16 @@
     <PackageTags>monogame;.net core;core;.net standard;standard;windowsdx</PackageTags>
     <PackageId>MonoGame.Framework.WindowsDX</PackageId>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+    <Platforms>x64</Platforms>
+    <AnalysisLevel>none</AnalysisLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <WarningLevel>0</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
   <ItemGroup>
@@ -55,7 +65,7 @@
     <Compile Include="Platform\Windows\WinFormsGameForm.cs" />
     <Compile Include="Platform\Windows\WinFormsGamePlatform.cs" />
     <Compile Include="Platform\Windows\WinFormsGameWindow.cs" />
-  </ItemGroup> 
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\ThirdParty\StbImageSharp\src\**\*.cs" LinkBase="Utilities\StbImageSharp" />

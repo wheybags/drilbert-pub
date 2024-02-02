@@ -9,6 +9,7 @@ namespace Microsoft.Xna.Framework.Input
     internal static class KeyboardUtil
     {
         static Dictionary<int, Keys> _map;
+        static Dictionary<int, Keys> _scancodeMap;
 
         static KeyboardUtil()
         {
@@ -151,12 +152,135 @@ namespace Microsoft.Xna.Framework.Input
             _map.Add(1073742097, Keys.BrowserRefresh);
             _map.Add(1073742098, Keys.BrowserFavorites);
             _map.Add(1073742106, Keys.Sleep);
+
+            _scancodeMap = new Dictionary<int, Keys>();
+            _scancodeMap.Add(42, Keys.Back);
+            _scancodeMap.Add(43, Keys.Tab);
+            _scancodeMap.Add(40, Keys.Enter);
+            _scancodeMap.Add(41, Keys.Escape);
+            _scancodeMap.Add(44, Keys.Space);
+            _scancodeMap.Add(52, Keys.OemQuotes);
+            _scancodeMap.Add(54, Keys.OemComma);
+            _scancodeMap.Add(45, Keys.OemMinus);
+            _scancodeMap.Add(55, Keys.OemPeriod);
+            _scancodeMap.Add(56, Keys.OemQuestion);
+            _scancodeMap.Add(39, Keys.D0);
+            _scancodeMap.Add(30, Keys.D1);
+            _scancodeMap.Add(31, Keys.D2);
+            _scancodeMap.Add(32, Keys.D3);
+            _scancodeMap.Add(33, Keys.D4);
+            _scancodeMap.Add(34, Keys.D5);
+            _scancodeMap.Add(35, Keys.D6);
+            _scancodeMap.Add(36, Keys.D7);
+            _scancodeMap.Add(37, Keys.D8);
+            _scancodeMap.Add(38, Keys.D9);
+            _scancodeMap.Add(51, Keys.OemSemicolon);
+            _scancodeMap.Add(100, Keys.OemBackslash);
+            _scancodeMap.Add(46, Keys.OemPlus);
+            _scancodeMap.Add(47, Keys.OemOpenBrackets);
+            _scancodeMap.Add(49, Keys.OemPipe);
+            _scancodeMap.Add(48, Keys.OemCloseBrackets);
+            _scancodeMap.Add(53, Keys.OemTilde);
+            _scancodeMap.Add(4, Keys.A);
+            _scancodeMap.Add(5, Keys.B);
+            _scancodeMap.Add(6, Keys.C);
+            _scancodeMap.Add(7, Keys.D);
+            _scancodeMap.Add(8, Keys.E);
+            _scancodeMap.Add(9, Keys.F);
+            _scancodeMap.Add(10, Keys.G);
+            _scancodeMap.Add(11, Keys.H);
+            _scancodeMap.Add(12, Keys.I);
+            _scancodeMap.Add(13, Keys.J);
+            _scancodeMap.Add(14, Keys.K);
+            _scancodeMap.Add(15, Keys.L);
+            _scancodeMap.Add(16, Keys.M);
+            _scancodeMap.Add(17, Keys.N);
+            _scancodeMap.Add(18, Keys.O);
+            _scancodeMap.Add(19, Keys.P);
+            _scancodeMap.Add(20, Keys.Q);
+            _scancodeMap.Add(21, Keys.R);
+            _scancodeMap.Add(22, Keys.S);
+            _scancodeMap.Add(23, Keys.T);
+            _scancodeMap.Add(24, Keys.U);
+            _scancodeMap.Add(25, Keys.V);
+            _scancodeMap.Add(26, Keys.W);
+            _scancodeMap.Add(27, Keys.X);
+            _scancodeMap.Add(28, Keys.Y);
+            _scancodeMap.Add(29, Keys.Z);
+            _scancodeMap.Add(76, Keys.Delete);
+            _scancodeMap.Add(57, Keys.CapsLock);
+            _scancodeMap.Add(58, Keys.F1);
+            _scancodeMap.Add(59, Keys.F2);
+            _scancodeMap.Add(60, Keys.F3);
+            _scancodeMap.Add(61, Keys.F4);
+            _scancodeMap.Add(62, Keys.F5);
+            _scancodeMap.Add(63, Keys.F6);
+            _scancodeMap.Add(64, Keys.F7);
+            _scancodeMap.Add(65, Keys.F8);
+            _scancodeMap.Add(66, Keys.F9);
+            _scancodeMap.Add(67, Keys.F10);
+            _scancodeMap.Add(68, Keys.F11);
+            _scancodeMap.Add(69, Keys.F12);
+            _scancodeMap.Add(70, Keys.PrintScreen);
+            _scancodeMap.Add(71, Keys.Scroll);
+            _scancodeMap.Add(72, Keys.Pause);
+            _scancodeMap.Add(73, Keys.Insert);
+            _scancodeMap.Add(74, Keys.Home);
+            _scancodeMap.Add(75, Keys.PageUp);
+            _scancodeMap.Add(77, Keys.End);
+            _scancodeMap.Add(78, Keys.PageDown);
+            _scancodeMap.Add(79, Keys.Right);
+            _scancodeMap.Add(80, Keys.Left);
+            _scancodeMap.Add(81, Keys.Down);
+            _scancodeMap.Add(82, Keys.Up);
+            _scancodeMap.Add(83, Keys.NumLock);
+            _scancodeMap.Add(84, Keys.Divide);
+            _scancodeMap.Add(85, Keys.Multiply);
+            _scancodeMap.Add(86, Keys.Subtract);
+            _scancodeMap.Add(87, Keys.Add);
+            _scancodeMap.Add(88, Keys.Enter);
+            _scancodeMap.Add(89, Keys.NumPad1);
+            _scancodeMap.Add(90, Keys.NumPad2);
+            _scancodeMap.Add(91, Keys.NumPad3);
+            _scancodeMap.Add(92, Keys.NumPad4);
+            _scancodeMap.Add(93, Keys.NumPad5);
+            _scancodeMap.Add(94, Keys.NumPad6);
+            _scancodeMap.Add(95, Keys.NumPad7);
+            _scancodeMap.Add(96, Keys.NumPad8);
+            _scancodeMap.Add(97, Keys.NumPad9);
+            _scancodeMap.Add(98, Keys.NumPad0);
+            _scancodeMap.Add(99, Keys.Decimal);
+            _scancodeMap.Add(112, Keys.F21);
+            _scancodeMap.Add(113, Keys.F22);
+            _scancodeMap.Add(114, Keys.F23);
+            _scancodeMap.Add(115, Keys.F24);
+            _scancodeMap.Add(216, Keys.OemClear);
+            _scancodeMap.Add(220, Keys.Decimal);
+            _scancodeMap.Add(224, Keys.LeftControl);
+            _scancodeMap.Add(225, Keys.LeftShift);
+            _scancodeMap.Add(226, Keys.LeftAlt);
+            _scancodeMap.Add(227, Keys.LeftWindows);
+            _scancodeMap.Add(228, Keys.RightControl);
+            _scancodeMap.Add(229, Keys.RightShift);
+            _scancodeMap.Add(154, Keys.RightAlt);
+            _scancodeMap.Add(231, Keys.RightWindows);
+            _scancodeMap.Add(262, Keys.VolumeMute);
+            _scancodeMap.Add(272, Keys.BrowserStop);
         }
 
         public static Keys ToXna(int key)
         {
             Keys xnaKey;
             if (_map.TryGetValue(key, out xnaKey))
+                return xnaKey;
+
+            return Keys.None;
+        }
+
+        public static Keys ScancodeToXna(int scancode)
+        {
+            Keys xnaKey;
+            if (_scancodeMap.TryGetValue(scancode, out xnaKey))
                 return xnaKey;
 
             return Keys.None;

@@ -9,6 +9,18 @@
     <PackageId>MonoGame.Framework.DesktopGL</PackageId>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <CopyContentFiles>True</CopyContentFiles>
+    <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
+    <AnalysisLevel>none</AnalysisLevel>
+    <Configurations>Debug;Release</Configurations>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <WarningLevel>0</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
   <!-- NETFX reference assemblies let us target .NET Framework on Mac/Linux without Mono -->

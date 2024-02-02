@@ -23,6 +23,7 @@ namespace Microsoft.Xna.Framework
 
         private readonly Game _game;
         private readonly List<Keys> _keys;
+        private readonly List<Keys> _keysByScancode;
 
         private int _isExiting;
         private SdlGameWindow _view;
@@ -34,7 +35,8 @@ namespace Microsoft.Xna.Framework
         {
             _game = game;
             _keys = new List<Keys>();
-            Keyboard.SetKeys(_keys);
+            _keysByScancode = new List<Keys>();
+            Keyboard.SetKeys(_keys, _keysByScancode);
 
             Sdl.Version sversion;
             Sdl.GetVersion(out sversion);
@@ -138,6 +140,9 @@ namespace Microsoft.Xna.Framework
                         var key = KeyboardUtil.ToXna(ev.Key.Keysym.Sym);
                         if (!_keys.Contains(key))
                             _keys.Add(key);
+                        var keyByScancode = KeyboardUtil.ScancodeToXna(ev.Key.Keysym.Scancode);
+                        if (!_keysByScancode.Contains(keyByScancode))
+                            _keysByScancode.Add(keyByScancode);
                         char character = (char)ev.Key.Keysym.Sym;
                         _view.OnKeyDown(new InputKeyEventArgs(key));
                         if (char.IsControl(character))
@@ -148,6 +153,8 @@ namespace Microsoft.Xna.Framework
                     {
                         var key = KeyboardUtil.ToXna(ev.Key.Keysym.Sym);
                         _keys.Remove(key);
+                        var keyByScancode = KeyboardUtil.ScancodeToXna(ev.Key.Keysym.Scancode);
+                        _keysByScancode.Remove(keyByScancode);
                         _view.OnKeyUp(new InputKeyEventArgs(key));
                         break;
                     }

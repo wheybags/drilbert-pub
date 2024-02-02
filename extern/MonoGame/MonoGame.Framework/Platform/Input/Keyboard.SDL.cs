@@ -9,6 +9,7 @@ namespace Microsoft.Xna.Framework.Input
     public static partial class Keyboard
     {
         static List<Keys> _keys;
+        static List<Keys> _keysByScancode;
 
         private static KeyboardState PlatformGetState()
         {
@@ -18,9 +19,18 @@ namespace Microsoft.Xna.Framework.Input
                                      (modifiers & Sdl.Keyboard.Keymod.NumLock) == Sdl.Keyboard.Keymod.NumLock);
         }
 
-        internal static void SetKeys(List<Keys> keys)
+        private static KeyboardState PlatformGetStateByScancode()
+        {
+            var modifiers = Sdl.Keyboard.GetModState();
+            return new KeyboardState(_keysByScancode,
+                                     (modifiers & Sdl.Keyboard.Keymod.CapsLock) == Sdl.Keyboard.Keymod.CapsLock,
+                                     (modifiers & Sdl.Keyboard.Keymod.NumLock) == Sdl.Keyboard.Keymod.NumLock);
+        }
+
+        internal static void SetKeys(List<Keys> keys, List<Keys> keysByScancode)
         {
             _keys = keys;
+            _keysByScancode = keysByScancode;
         }
     }
 }
