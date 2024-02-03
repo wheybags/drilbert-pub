@@ -733,6 +733,8 @@ namespace Drilbert
             bool crushable(TileId tileId) => tileIdIsItem(tileId) || tileId == Constants.dirtTileId || tileId == Constants.deletedPlaceholderTile;
             int standingOnBomb = state.tilemaps.Last().get(state.tilemaps.Last().playerPosition)->bombId;
 
+            state.tilemaps.Last().set(origin, new Tile(Constants.airTileId, 0));
+
             bool didMove = true;
             while (didMove)
             {
@@ -899,8 +901,8 @@ namespace Drilbert
                                 }
                             }
 
-                            if (didCut && segments[segmentIndex].tileId != Constants.dirtTileId)
-                                resegmentAfterMegadrillCut(state, newPoints);
+                            if (segments[segmentIndex].tileId != Constants.dirtTileId)
+                                resegmentIfNeeded(state, didCut, newPoints);
                         }
                     }
 
@@ -1045,8 +1047,8 @@ namespace Drilbert
                             }
                         }
 
-                        if (didCut && segments[segmentIndex].tileId != Constants.dirtTileId)
-                            resegmentAfterMegadrillCut(state, newPoints);
+                        if (segments[segmentIndex].tileId != Constants.dirtTileId)
+                            resegmentIfNeeded(state, didCut, newPoints);
                     }
                 }
 
@@ -1063,18 +1065,37 @@ namespace Drilbert
             return didAnyMove;
         }
 
-        // If we did a cut, we might have created a new segment of stone, which will have the same segment ID as the old one.
-        // That's not ok, because then it will merge if it ever touches the other half of its old self, so here we try to detect
-        // that and assign a new id.
-        private static void resegmentAfterMegadrillCut(EvaluationResult state, List<Vec2i> pointsFromCutSegment)
+        // If we did a megadrill cut, or pushed a chunk partially offscreen, we might have created a new segment of stone, which
+        // will have the same segment ID as the old one. That's not ok, because then it will merge if it ever touches the other
+        // half of its old self, so here we try to detect that and assign a new id.
+        private static void resegmentIfNeeded(EvaluationResult state, bool didMegadrillCut, List<Vec2i> newPoints)
         {
+            if (!didMegadrillCut)
+            {
+                bool pushedOffScreenEdge = false;
+                foreach (Vec2i point in newPoints)
+                {
+                    if (!state.tilemaps.Last().isPointValid(point))
+                    {
+                        pushedOffScreenEdge = true;
+                        break;
+                    }
+                }
+
+                if (!pushedOffScreenEdge)
+                    return;
+            }
+
             HashSet<Segment> newSegmentsAfterCut = new HashSet<Segment>();
             {
                 List<Segment> allSegmentsAfterCut = calculateSegments(state.tilemaps.Last());
                 Dictionary<Vec2i, int> segmentLookup = calculatePointToSegmentDict(allSegmentsAfterCut);
 
-                foreach (Vec2i point in pointsFromCutSegment)
-                    newSegmentsAfterCut.Add(allSegmentsAfterCut[segmentLookup[point]]);
+                foreach (Vec2i point in newPoints)
+                {
+                    if (state.tilemaps.Last().isPointValid(point))
+                        newSegmentsAfterCut.Add(allSegmentsAfterCut[segmentLookup[point]]);
+                }
             }
 
             if (newSegmentsAfterCut.Count > 1)
