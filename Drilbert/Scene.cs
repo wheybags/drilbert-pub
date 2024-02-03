@@ -150,18 +150,18 @@ namespace Drilbert
                     {
                         string tiledPath = Constants.rootPath + "/Tiled/linux/Tiled-1.10.2_Linux_Qt-6_x86_64.AppImage";
 
-                        try
+                        // try
+                        // {
+                        //     using (Process proc = Process.Start("chmod", "+x \"" + tiledPath + "\""))
+                        //         proc.WaitForExit();
+                        //
+                        //     Process tiledProcess = Process.Start(tiledPath, projectPath);
+                        //     if (tiledProcess.WaitForExit(2000))
+                        //         throw new Exception();
+                        // }
+                        // catch (Exception)
                         {
-                            using (Process proc = Process.Start("chmod", "+x \"" + tiledPath + "\""))
-                                proc.WaitForExit();
-
-                            Process tiledProcess = Process.Start(tiledPath, projectPath);
-                            if (tiledProcess.WaitForExit(2000))
-                                throw new Exception();
-                        }
-                        catch (Exception)
-                        {
-                            string message = "Problems with the linux steam runtime make it hard to start the level editor (Tiled) from inside drilbert.";
+                            string message = "Problems with the linux steam runtime make it impossible to start the level editor (Tiled) from inside drilbert.";
                             message += "\nYou can run the editor manually, it is located at " + tiledPath;
                             message += "\nOpen the example session at " + projectPath;
                             NativeFuncs.SDL_ShowSimpleMessageBox(NativeFuncs.SDL_MESSAGEBOX_INFORMATION, "Running Tiled editor failed", message, IntPtr.Zero);
