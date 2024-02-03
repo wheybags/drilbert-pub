@@ -45,6 +45,10 @@ namespace Tests
                         "PlaceholderFromDiamondOutput",
                         "PlaceholderFromDiamondOutput1",
                         "CrushedDeathPositionOutput",
+                        "BombInUOutput",
+                        "BombInU2PartOutput",
+                        "BombInUOneWideOutput",
+                        "BombTriggerItemOutput",
                      })
             {
                 runTestMap(map);

@@ -728,9 +728,89 @@ namespace Drilbert
             return tileId != Constants.megadrillTileId && tileId != Constants.diamondIds[0];
         }
 
+        private static bool crushableByExplosionPush(TileId tileId) => tileIdIsItem(tileId) || tileId == Constants.dirtTileId || tileId == Constants.deletedPlaceholderTile;
+
+        class FirePushResult
+        {
+            public bool dead = false;
+            public int tilesHitCount = 0;
+            public List<int> pushedSegments = new List<int>();
+            public List<Vec2i> triggeredBombs = new List<Vec2i>();
+        }
+
+        private static FirePushResult resolveOneFirePushIteration(EvaluationResult state, Vec2i origin, Vec2i direction, FireDirection fireDirection, List<Segment> segments, Dictionary<Vec2i, int> segmentLookup, HashSet<int> fixedSegments)
+        {
+            FirePushResult result = new FirePushResult();
+
+            bool localCrushable(Segment segment)
+            {
+                // triggered bombs should not be considered crushable like their item form, but their tile id
+                // is still the bomb item for now, so we insert a special check here
+                if (segment.Count == 1 && result.triggeredBombs.Contains(segment.First()))
+                        return false;
+
+                return crushableByExplosionPush(segment.tileId);
+            }
+
+            Vec2i directHitPoint = origin;
+            while (true)
+            {
+                if (directHitPoint == state.tilemaps.Last().playerPosition)
+                {
+                    result.dead = true;
+                    return result;
+                }
+
+                directHitPoint += direction;
+                if (!state.tilemaps.Last().isPointValid(directHitPoint))
+                    break;
+
+                result.tilesHitCount++;
+
+                Tile* tile = state.tilemaps.Last().get(directHitPoint);
+
+                if (tile->tileId == Constants.bombItemTileId)
+                    result.triggeredBombs.Add(directHitPoint);
+
+                TileId tileId = tile->tileId;
+                if (tileIdCanFall(tileId) || tileId == Constants.deletedPlaceholderTile)
+                {
+                    int segment = segmentLookup[directHitPoint];
+                    if (!fixedSegments.Contains(segment) || localCrushable(segments[segment]))
+                        result.pushedSegments.Add(segment);
+
+                    break;
+                }
+                else if (tileId != Constants.airTileId && tileId != Constants.megadrillTileId)
+                {
+                    break;
+                }
+            }
+
+            for (int pushingSegmentIndex = 0; pushingSegmentIndex < result.pushedSegments.Count; pushingSegmentIndex++)
+            {
+                Segment pushingSegment = segments[result.pushedSegments[pushingSegmentIndex]];
+                foreach (Vec2i p in pushingSegment)
+                {
+                    if (state.tilemaps.Last().isPointValid(p + direction) && tileIdCanFall(state.tilemaps.Last().get(p + direction)->tileId))
+                    {
+                        int pushedSegmentIndex = segmentLookup[p + direction];
+
+                        if (!result.pushedSegments.Contains(pushedSegmentIndex) && !fixedSegments.Contains(pushedSegmentIndex))
+                        {
+                            // items can push items but are crushed if they try to push anything else
+                            if (!localCrushable(pushingSegment) || localCrushable(segments[pushedSegmentIndex]))
+                                result.pushedSegments.Add(pushedSegmentIndex);
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
         static void tryPushFromExplosion(Vec2i origin, EvaluationResult state)
         {
-            bool crushable(TileId tileId) => tileIdIsItem(tileId) || tileId == Constants.dirtTileId || tileId == Constants.deletedPlaceholderTile;
             int standingOnBomb = state.tilemaps.Last().get(state.tilemaps.Last().playerPosition)->bombId;
 
             state.tilemaps.Last().set(origin, new Tile(Constants.airTileId, 0));
@@ -745,86 +825,66 @@ namespace Drilbert
                     Vec2i direction = directionToVector(fireDirection.toDirection());
                     List<Segment> segments = calculateSegments(state.tilemaps.Last());
                     Dictionary<Vec2i, int> segmentLookup = calculatePointToSegmentDict(segments);
-                    HashSet<int> cantFall = calculateFixedSegments(state.tilemaps.Last(), segments, direction, id => id != Constants.airTileId && !crushable(id) && id != Constants.megadrillTileId );
 
 #if DEBUG
                     foreach (Segment segment in segments)
                     {
-                        if (crushable(segment.tileId))
+                        if (crushableByExplosionPush(segment.tileId))
                             Util.ReleaseAssert(segment.Count == 1);
                     }
 #endif
 
-                    state.tilemaps.Last().tileTempState.get(origin)->fireDirection = FireDirection.NoDirection;
+                    HashSet<int> cantFall = calculateFixedSegments(state.tilemaps.Last(), segments, direction, id => id != Constants.airTileId && !crushableByExplosionPush(id) && id != Constants.megadrillTileId );
+                    FirePushResult pushResult = resolveOneFirePushIteration(state, origin, direction, fireDirection, segments, segmentLookup, cantFall);
 
-                    List<int> pushed = new List<int>();
+                    // "paint" the fire tiles onto the map
                     {
-                        Vec2i directHitPoint = origin;
-                        while (true)
+                        state.tilemaps.Last().tileTempState.get(origin)->fireDirection = FireDirection.NoDirection;
+                        Vec2i pos = origin;
+                        for (int i = 0; i < pushResult.tilesHitCount - 1; i++)
                         {
-                            if (directHitPoint == state.tilemaps.Last().playerPosition)
-                            {
-                                state.tilemaps.Last().dead = true;
-                                goto breakOuter;
-                            }
-
-                            directHitPoint+= direction;
-                            if (!state.tilemaps.Last().isPointValid(directHitPoint))
-                                break;
-
-
-                            Tile* tile = state.tilemaps.Last().get(directHitPoint);
-
-                            // Trigger any bombs we hit along the way
-                            if (tile->tileId == Constants.bombItemTileId)
-                            {
-                                tile->tileId = new TileId(Constants.bombTileId);
-                                tile->bombId = state.tilemaps.Last().nextBombId++;
-                                foreach (Segment segment in segments)
-                                {
-                                    if (segment.tileId == Constants.bombItemTileId && segment.Contains(directHitPoint))
-                                        segment.tileId = new TileId(Constants.bombTileId);
-                                }
-                            }
-
-                            TileId tileId = tile->tileId;
-                            if (tileIdCanFall(tileId) || tileId == Constants.deletedPlaceholderTile)
-                            {
-                                int segment = segmentLookup[directHitPoint];
-                                if (!cantFall.Contains(segment) || crushable(tileId))
-                                {
-                                    pushed.Add(segment);
-                                    state.tilemaps.Last().tileTempState.get(directHitPoint)->fireDirection = fireDirection;
-                                }
-
-                                break;
-                            }
-                            else if (tileId == Constants.airTileId || tileId == Constants.megadrillTileId)
-                            {
-                                state.tilemaps.Last().tileTempState.get(directHitPoint)->fireDirection = fireDirection;
-                            }
-                            else
-                            {
-                                break;
-                            }
+                            pos += direction;
+                            state.tilemaps.Last().tileTempState.get(pos)->fireDirection = fireDirection;
                         }
 
-                        for (int pushingSegmentIndex = 0; pushingSegmentIndex < pushed.Count; pushingSegmentIndex++)
+                        if (!state.tilemaps.Last().isPointValid(pos + direction*2))
                         {
-                            Segment pushingSegment = segments[pushed[pushingSegmentIndex]];
-                            foreach (Vec2i p in pushingSegment)
-                            {
-                                if (state.tilemaps.Last().isPointValid(p + direction) && tileIdCanFall(state.tilemaps.Last().get(p + direction)->tileId))
-                                {
-                                    int pushedSegmentIndex = segmentLookup[p + direction];
+                            pos += direction;
+                            state.tilemaps.Last().tileTempState.get(pos)->fireDirection = fireDirection;
+                        }
+                    }
 
-                                    if (!pushed.Contains(pushedSegmentIndex) && !cantFall.Contains(pushedSegmentIndex))
-                                    {
-                                        // items can push items but are crushed if they try to push anything else
-                                        if (!crushable(pushingSegment.tileId) || crushable(segments[pushedSegmentIndex].tileId))
-                                            pushed.Add(pushedSegmentIndex);
-                                    }
-                                }
+                    // Trigger any bombs we hit along the way
+                    foreach (Vec2i bombPoint in pushResult.triggeredBombs)
+                    {
+                        Tile* tile = state.tilemaps.Last().get(bombPoint);
+                        tile->tileId = new TileId(Constants.bombTileId);
+                        tile->bombId = state.tilemaps.Last().nextBombId++;
+                        foreach (Segment segment in segments)
+                        {
+                            if (segment.tileId == Constants.bombItemTileId && segment.Contains(bombPoint))
+                                segment.tileId = new TileId(Constants.bombTileId);
+                        }
+                    }
+
+                    if (pushResult.dead)
+                    {
+                        state.tilemaps.Last().dead = true;
+                        goto breakOuter;
+                    }
+
+                    // Check if we are pushing a segment (or attached segments) in two directions at once, and skip if we are
+                    // This means for example, something like a bomb at the bottom of a U-shaped segment will do nothing
+                    {
+                        Vec2i oppositeDirection = new Vec2i() - direction;
+                        FirePushResult pushResultOppositeDirection = resolveOneFirePushIteration(state, origin, oppositeDirection, FireDirection.NoDirection, segments, segmentLookup, new HashSet<int>());
+
+                        foreach (int segmentIndex in pushResultOppositeDirection.pushedSegments)
+                        {
+                            if (pushResult.pushedSegments.Contains(segmentIndex))
+                            {
+                                pushResult.pushedSegments.Clear();
+                                break;
                             }
                         }
                     }
@@ -847,10 +907,10 @@ namespace Drilbert
                     {
                         TileId segmentTileId = segments[segmentIndex].tileId;
 
-                        if (segmentTileId != Constants.airTileId && !crushable(segmentTileId))
+                        if (segmentTileId != Constants.airTileId && !crushableByExplosionPush(segmentTileId))
                         {
                             Vec2i offset = new Vec2i(0, 0);
-                            if (pushed.Contains(segmentIndex))
+                            if (pushResult.pushedSegments.Contains(segmentIndex))
                             {
                                 offset += direction;
                                 didMove = true;
@@ -911,10 +971,10 @@ namespace Drilbert
                     {
                         TileId segmentTileId = segments[segmentIndex].tileId;
 
-                        if (crushable(segmentTileId))
+                        if (crushableByExplosionPush(segmentTileId))
                         {
                             Vec2i offset = new Vec2i(0, 0);
-                            if (pushed.Contains(segmentIndex))
+                            if (pushResult.pushedSegments.Contains(segmentIndex))
                             {
                                 offset += direction;
                                 didMove = true;
